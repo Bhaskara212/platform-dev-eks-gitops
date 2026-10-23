@@ -1,0 +1,45 @@
+# Used ONCE to install Argo CD with Helm. Afterwards Argo CD only syncs gitops/apps.
+# Chart: argo/argo-cd  (pin the version in README step; bump deliberately)
+global:
+  domain: argocd.internal   # placeholder only; no ingress is created
+
+configs:
+  params:
+    server.insecure: true      # plain HTTP behind kubectl port-forward (no public ingress)
+  cm:
+    application.resourceTrackingMethod: annotation
+    timeout.reconciliation: 180s
+
+server:
+  service:
+    type: ClusterIP            # internal-only
+  ingress:
+    enabled: false
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 256Mi }
+
+repoServer:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 512Mi }
+
+controller:
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 768Mi }
+
+applicationSet:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { memory: 128Mi }
+
+redis:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { memory: 128Mi }
+
+dex:
+  enabled: false
+notifications:
+  enabled: false
