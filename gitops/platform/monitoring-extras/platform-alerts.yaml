@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-dev-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: platform-monitoring
+spec:
+  groups:
+    - name: platform.nodes
+      rules:
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: "Node {{ $labels.node }} not Ready for 5m"
+        - alert: NodeHighMemory
+          expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Node {{ $labels.instance }} memory > 90%"
+    - name: platform.workloads
+      rules:
+        - alert: PodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 5m
+          labels: { severity: warning }
+          annotations:
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }} restarting repeatedly"
+        - alert: PVCAlmostFull
+          expr: kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes < 0.15
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} < 15% free"

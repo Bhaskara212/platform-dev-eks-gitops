@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-extras
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"   # after the CRDs exist
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR_ORG/platform-dev-eks-gitops.git   # <-- change
+    targetRevision: main
+    path: gitops/platform/monitoring-extras
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ServerSideApply=true]
+    retry:
+      limit: 5
+      backoff: { duration: 30s, factor: 2, maxDuration: 5m }

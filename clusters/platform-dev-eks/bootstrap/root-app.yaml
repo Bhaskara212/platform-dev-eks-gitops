@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-dev-eks-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: REPLACE_WITH_YOUR_GIT_REPO_URL
+    targetRevision: main
+    path: clusters/platform-dev-eks/monitoring
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true

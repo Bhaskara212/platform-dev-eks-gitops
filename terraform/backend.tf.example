@@ -1,0 +1,10 @@
+# Create the bucket + lock table once (outside this stack), then rename to backend.tf
+terraform {
+  backend "s3" {
+    bucket         = "REPLACE-tfstate-bucket"
+    key            = "platform-dev-eks/terraform.tfstate"
+    region         = "ap-southeast-2"
+    dynamodb_table = "REPLACE-tfstate-lock"   # or use_lockfile = true on newer Terraform
+    encrypt        = true
+  }
+}

@@ -1,0 +1,90 @@
+# PoC values. Validate chart compatibility and resource capacity before rollout.
+fullnameOverride: platform-dev-kube-prometheus-stack
+
+defaultRules:
+  create: true
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    retention: 24h
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 2Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+
+grafana:
+  enabled: true
+  ingress:
+    enabled: false
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: gp3
+    accessModes: [ReadWriteOnce]
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  sidecar:
+    dashboards:
+      enabled: true
+    datasources:
+      enabled: true
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    replicas: 1
+    retention: 3d
+    retentionSize: 8GB
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 10Gi
+    resources:
+      requests:
+        cpu: 300m
+        memory: 1Gi
+      limits:
+        memory: 2Gi
+
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+prometheusOperator:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# No Ingress or LoadBalancer: use kubectl port-forward or private connectivity.

@@ -1,0 +1,34 @@
+# kube-prometheus-stack = Prometheus + Prometheus Operator + Alertmanager + Grafana
+#                         + kube-state-metrics + node-exporter
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 75.15.1          # <-- pin; confirm/bump with `helm search repo prometheus-community/kube-prometheus-stack`
+      helm:
+        releaseName: monitoring
+        valueFiles:
+          - $values/gitops/platform/monitoring/values.yaml
+    - repoURL: https://github.com/YOUR_ORG/platform-dev-eks-gitops.git   # <-- change
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true            # required: the chart's CRDs exceed the client-side annotation limit
+      - ServerSideDiff=true
+    retry:
+      limit: 5
+      backoff: { duration: 30s, factor: 2, maxDuration: 5m }
