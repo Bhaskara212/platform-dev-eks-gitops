@@ -13,7 +13,7 @@ spec:
         releaseName: platform-dev
         valueFiles:
           - $values/clusters/platform-dev-eks/monitoring/values.yaml
-    - repoURL: REPLACE_WITH_YOUR_GIT_REPO_URL
+    - repoURL: https://github.com/Bhaskara212/platform-dev-eks-gitops.git
       targetRevision: main
       ref: values
   destination:

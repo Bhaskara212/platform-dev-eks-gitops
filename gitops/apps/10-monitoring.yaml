@@ -17,7 +17,7 @@ spec:
         releaseName: monitoring
         valueFiles:
           - $values/gitops/platform/monitoring/values.yaml
-    - repoURL: https://github.com/YOUR_ORG/platform-dev-eks-gitops.git   # <-- change
+    - repoURL: https://github.com/Bhaskara212/platform-dev-eks-gitops.git  # <-- change
       targetRevision: main
       ref: values
   destination:
