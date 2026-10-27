@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-api
+  labels:
+    app.kubernetes.io/name: order-api
+    app.kubernetes.io/part-of: food-delivery
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: order-api
+        app.kubernetes.io/part-of: food-delivery
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: order-api
+          image: 706119322787.dkr.ecr.ap-southeast-2.amazonaws.com/food-delivery-order-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: REDIS_HOST, value: redis}
+            - {name: REDIS_PORT, value: "6379"}
+          ports: [{name: http, containerPort: 5001}]
+          readinessProbe: {httpGet: {path: /healthz, port: http}, initialDelaySeconds: 5, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /healthz, port: http}, initialDelaySeconds: 10, periodSeconds: 20}
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {cpu: 300m, memory: 256Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
