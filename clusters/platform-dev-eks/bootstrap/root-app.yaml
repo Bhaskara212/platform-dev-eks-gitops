@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: REPLACE_WITH_YOUR_GIT_REPO_URL
+    repoURL: https://github.com/Bhaskara212/platform-dev-eks-gitops.git
     targetRevision: main
     path: clusters/platform-dev-eks/monitoring
     directory:

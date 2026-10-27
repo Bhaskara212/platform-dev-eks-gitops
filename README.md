@@ -87,7 +87,7 @@ kubectl get sc                                    # gp2 exists; gp3 comes from A
 ```
 Gate: do not continue until both nodes are `Ready` and `aws-node` is `2/2 READY`. If not: `./scripts/diagnose.sh`.
 
-> EKS version: `cluster_version` defaults to 1.34. Confirm it is still in **standard** support (extended support costs extra): `aws eks describe-cluster-versions --region ap-southeast-2` / EKS docs.
+> EKS version: `cluster_version` defaults to 1.36. Confirm it is still in **standard** support (extended support costs extra): `aws eks describe-cluster-versions --region ap-southeast-2` / EKS docs.
 
 ## 4. Point manifests at your Git repo
 ```bash
