@@ -174,3 +174,71 @@ cd terraform && terraform destroy
 ## Notes / assumptions
 - Versions pinned in this repo (EKS module `~> 20.37`, VPC `~> 5.21`, kube-prometheus-stack `75.15.1`) were written without registry access: confirm with `terraform init -upgrade` and `helm search repo` and pin what you test.
 - Dev sizing: 7-day Prometheus retention on a 10 Gi gp3 volume, single replicas, no HA, no external alert receiver.
+
+
+# Food Delivery Demo for EKS + Argo CD
+
+Demo only: frontend (NGINX), restaurant API (Flask), order API (Flask), Redis (temporary data). All Services are ClusterIP. No Ingress, LoadBalancer, or NodePort.
+
+## Build and push images (Git Bash)
+Confirm AWS account first: `aws sts get-caller-identity`. Replace the account ID in the three deployment YAMLs if needed.
+
+```bash
+export AWS_REGION=ap-southeast-2
+export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export ECR_REGISTRY=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+for repo in food-delivery-frontend food-delivery-restaurant-api food-delivery-order-api; do
+  aws ecr describe-repositories --repository-names "$repo" --region "$AWS_REGION" >/dev/null 2>&1 || aws ecr create-repository --repository-name "$repo" --image-scanning-configuration scanOnPush=true --region "$AWS_REGION"
+done
+docker build -t "$ECR_REGISTRY/food-delivery-restaurant-api:0.1.0" applications/food-delivery/restaurant-api
+docker build -t "$ECR_REGISTRY/food-delivery-order-api:0.1.0" applications/food-delivery/order-api
+docker build -t "$ECR_REGISTRY/food-delivery-frontend:0.1.0" applications/food-delivery/frontend
+docker push "$ECR_REGISTRY/food-delivery-restaurant-api:0.1.0"
+docker push "$ECR_REGISTRY/food-delivery-order-api:0.1.0"
+docker push "$ECR_REGISTRY/food-delivery-frontend:0.1.0"
+```
+Worker nodes need ECR image-pull permissions (e.g. AmazonEC2ContainerRegistryReadOnly). Never store AWS credentials in manifests.
+
+## Add to existing GitOps repo
+Copy `applications/food-delivery/` into the repository root. Copy `gitops/apps/food-delivery.yaml` into your existing `gitops/apps/` folder. The Argo Application points to `https://github.com/Bhaskara212/platform-dev-eks-gitops.git`, branch `main`; change URL/branch if yours differs. If the root app does not discover `gitops/apps/`, add this Application to the path the root app watches. Do not create a second root app.
+
+Build/push images before syncing. Commit and push to the branch configured in the Application:
+```bash
+git add applications/food-delivery gitops/apps/food-delivery.yaml
+git commit -m "Add food delivery demo"
+git push origin main
+kubectl apply -f gitops/apps/food-delivery.yaml
+```
+If testing on `feature/new-eks-cluster`, push that branch and temporarily set `targetRevision: feature/new-eks-cluster`, then switch back after merge.
+
+## Validate and open
+```bash
+kubectl get applications -n argocd
+kubectl describe application food-delivery -n argocd
+kubectl get pods,svc -n food-delivery
+kubectl get events -n food-delivery --sort-by=.metadata.creationTimestamp
+kubectl rollout status deployment/frontend -n food-delivery --timeout=180s
+kubectl rollout status deployment/restaurant-api -n food-delivery --timeout=180s
+kubectl rollout status deployment/order-api -n food-delivery --timeout=180s
+kubectl rollout status deployment/redis -n food-delivery --timeout=180s
+```
+Port-forward (keep terminal open), then visit http://localhost:8088:
+```bash
+kubectl -n food-delivery port-forward svc/frontend 8088:80
+```
+Test APIs from a second terminal:
+```bash
+curl -s http://localhost:8088/api/restaurants
+curl -s -X POST http://localhost:8088/api/orders -H 'Content-Type: application/json' -d '{"customer":"Demo Customer","items":[{"id":"masala-dosa","quantity":2},{"id":"filter-coffee","quantity":1}]}'
+curl -s http://localhost:8088/api/orders
+```
+Monitoring/troubleshooting:
+```bash
+kubectl top pods -n food-delivery
+kubectl logs deployment/frontend -n food-delivery
+kubectl logs deployment/restaurant-api -n food-delivery
+kubectl logs deployment/order-api -n food-delivery
+kubectl logs deployment/redis -n food-delivery
+```
+All app services are internal. Redis uses `emptyDir` and no persistence; data is lost if the Redis pod is replaced. This PoC has no auth, payments, TLS, or production durability.

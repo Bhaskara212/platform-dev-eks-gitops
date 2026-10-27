@@ -16,23 +16,7 @@ module "eks" {
   # Access Entries (modern) + aws-auth ConfigMap compatibility.
   authentication_mode                      = "API_AND_CONFIG_MAP"
   enable_cluster_creator_admin_permissions = true
-  
-  access_entries = {
-    teja = {
-      principal_arn = "arn:aws:iam::706119322787:user/teja"
-      type          = "STANDARD"
 
-      policy_associations = {
-        view_access = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
-
-          access_scope = {
-            type = "cluster"
-          }
-        }
-      }
-    }
-  }
 
   cluster_enabled_log_types = ["api", "audit", "authenticator"]
 
@@ -135,4 +119,14 @@ resource "aws_iam_role" "ebs_csi" {
 resource "aws_iam_role_policy_attachment" "ebs_csi" {
   role       = aws_iam_role.ebs_csi.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+resource "aws_eks_access_policy_association" "teja_view_access" {
+  cluster_name  = var.cluster_name
+  principal_arn = "arn:aws:iam::706119322787:user/teja"
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
 }

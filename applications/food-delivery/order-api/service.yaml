@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-api
+  labels:
+    app.kubernetes.io/name: order-api
+    app.kubernetes.io/part-of: food-delivery
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: order-api
+  ports:
+    - name: http
+      port: 5001
+      targetPort: http
