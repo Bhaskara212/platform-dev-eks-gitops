@@ -21,18 +21,60 @@ spec:
         runAsUser: 101
         runAsGroup: 101
         fsGroup: 101
-        seccompProfile: {type: RuntimeDefault}
+        seccompProfile:
+          type: RuntimeDefault
+
       containers:
         - name: frontend
           image: 706119322787.dkr.ecr.ap-southeast-2.amazonaws.com/food-delivery-frontend:0.1.0
           imagePullPolicy: IfNotPresent
-          ports: [{name: http, containerPort: 8080}]
-          readinessProbe: {httpGet: {path: /healthz, port: http}, initialDelaySeconds: 3, periodSeconds: 10}
-          livenessProbe: {httpGet: {path: /healthz, port: http}, initialDelaySeconds: 10, periodSeconds: 20}
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-tmp
+              mountPath: /tmp
+            - name: nginx-run
+              mountPath: /var/run
+
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+
           resources:
-            requests: {cpu: 25m, memory: 32Mi}
-            limits: {cpu: 150m, memory: 96Mi}
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 150m
+              memory: 96Mi
+
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
-            capabilities: {drop: ["ALL"]}
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-tmp
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+
