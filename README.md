@@ -242,3 +242,62 @@ kubectl logs deployment/order-api -n food-delivery
 kubectl logs deployment/redis -n food-delivery
 ```
 All app services are internal. Redis uses `emptyDir` and no persistence; data is lost if the Redis pod is replaced. This PoC has no auth, payments, TLS, or production durability.
+
+
+
+## Architecture
+
+```mermaid
+flowchart TB
+    DEV["Developer / DevOps Engineer"]
+
+    subgraph GIT["GitHub"]
+        APPREPO["Food Delivery Application Source"]
+        GITOPS["GitOps Repository<br/>Kubernetes Manifests"]
+    end
+
+    subgraph AWS["AWS - ap-southeast-2"]
+        subgraph ECR["Amazon ECR"]
+            IMG1["Frontend Image"]
+            IMG2["Restaurant API Image"]
+            IMG3["Order API Image"]
+        end
+
+        subgraph EKS["Amazon EKS: platform-dev-eks"]
+            ARGO["Argo CD"]
+
+            subgraph NS["Namespace: food-delivery"]
+                SVC1["Frontend ClusterIP Service"]
+                SVC2["Restaurant API ClusterIP Service"]
+                SVC3["Order API ClusterIP Service"]
+
+                FE["Frontend Deployment<br/>NGINX"]
+                REST["Restaurant API Deployment<br/>Flask / Gunicorn"]
+                ORDER["Order API Deployment<br/>Flask / Gunicorn"]
+                REDIS["Redis Deployment<br/>Ephemeral Demo Storage"]
+            end
+        end
+    end
+
+    USER["Internal User / Developer"]
+
+    DEV -->|"Commit and push"| APPREPO
+    DEV -->|"Commit Kubernetes manifests"| GITOPS
+    GITOPS -->|"Argo CD watches Git"| ARGO
+    ARGO -->|"Sync and reconcile resources"| NS
+
+    ECR -.->|"Pull container images"| FE
+    ECR -.->|"Pull container images"| REST
+    ECR -.->|"Pull container images"| ORDER
+
+    USER -->|"Port-forward or private access"| SVC1
+    SVC1 --> FE
+    FE -->|"Restaurant requests"| SVC2
+    FE -->|"Order requests"| SVC3
+    SVC2 --> REST
+    SVC3 --> ORDER
+    ORDER -->|"Read/write order data"| REDIS
+
+    TF["Terraform"]
+    TF -->|"Provision AWS infrastructure"| EKS
+```
