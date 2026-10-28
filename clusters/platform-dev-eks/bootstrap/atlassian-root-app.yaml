@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/Bhaskara212/platform-dev-eks-gitops.git
     targetRevision: main
-    path: clusters/platform-dev-eks/gitops/apps
+    path: gitops/apps
     directory:
       recurse: false
   destination:
