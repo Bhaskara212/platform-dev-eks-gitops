@@ -23,7 +23,7 @@ spec:
 
       containers:
         - name: restaurant-api
-          image: 706119322787.dkr.ecr.ap-southeast-2.amazonaws.com/food-delivery-restaurant-api:0.1.0
+          image: krishna21290/food-delivery-restaurant-api:0.1.0
           imagePullPolicy: IfNotPresent
 
           ports:
