@@ -1,0 +1,21 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-dev-atlassian
+  namespace: argocd
+spec:
+  project: atlassian
+  source:
+    repoURL: https://github.com/Bhaskara212/platform-dev-eks-gitops.git
+    targetRevision: main
+    path: clusters/platform-dev-eks/gitops/apps
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
