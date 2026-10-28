@@ -26,7 +26,7 @@ spec:
 
       containers:
         - name: frontend
-          image: 706119322787.dkr.ecr.ap-southeast-2.amazonaws.com/food-delivery-frontend:0.1.0
+          image: krishna21290/food-delivery-frontend:0.1.0
           imagePullPolicy: IfNotPresent
 
           ports:
