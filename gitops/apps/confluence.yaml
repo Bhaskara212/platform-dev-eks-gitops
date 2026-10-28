@@ -5,7 +5,7 @@ metadata:
   name: confluence
   namespace: argocd
 spec:
-  project: atlassian
+  project: default
   sources:
     - repoURL: https://atlassian.github.io/data-center-helm-charts
       chart: confluence
