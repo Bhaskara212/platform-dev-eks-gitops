@@ -1020,7 +1020,7 @@ confluence:
       requests:
         # -- Initial CPU request by Confluence pod.
         #
-        cpu: "2"
+        cpu: "500m"
 
         # -- Initial Memory request by Confluence pod
         #

@@ -918,7 +918,7 @@ jira:
 
         # -- Initial CPU request by Jira pod
         #
-        cpu: "2"
+        cpu: "500m"
 
         # -- Initial Memory request by Jira pod
         #
